@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DockSSH - SSH 远程管理与 Docker 应用中心</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- xterm.js - 使用本地文件 -->
+    <link rel="stylesheet" href="/static/vendor/xterm.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">🐳</span>
+            <span class="title">DockSSH</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#" data-page="home" class="active">首页</a></li>
+            <li><a href="#" data-page="ssh">SSH 配置</a></li>
+            <li><a href="#" data-page="docker">Docker 应用</a></li>
+        </ul>
+        <div class="connection-status">
+            <span id="connection-indicator" class="status-dot offline"></span>
+            <span id="connection-text">未连接</span>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="container">
+        <!-- 首页 -->
+        <section id="page-home" class="page active">
+            <div class="hero">
+                <h1>欢迎使用 DockSSH</h1>
+                <p class="subtitle">一站式 SSH 远程管理与 Docker 应用部署平台</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>SSH 远程管理</h3>
+                    <p>通过 Web 界面轻松管理远程 Linux 设备</p>
+                    <button onclick="showPage('ssh')" class="btn btn-primary">开始配置</button>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🐳</div>
+                    <h3>Docker 应用</h3>
+                    <p>一键安装常用 Docker 应用，支持自定义脚本</p>
+                    <button onclick="showPage('docker')" class="btn btn-primary">应用中心</button>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💻</div>
+                    <h3>悬浮终端</h3>
+                    <p>可拖动、调整大小的实时终端，随时随地使用</p>
+                    <button onclick="openFloatingTerminal()" class="btn btn-primary">打开终端</button>
+                </div>
+            </div>
+
+            <!-- 快速连接 -->
+            <div class="quick-connect">
+                <h2>快速连接</h2>
+                <div class="connect-form">
+                    <input type="text" id="quick-host" placeholder="主机地址" class="input" autocomplete="off">
+                    <input type="number" id="quick-port" placeholder="端口" value="22" class="input" autocomplete="off">
+                    <input type="text" id="quick-username" placeholder="用户名" class="input" autocomplete="username">
+                    <input type="password" id="quick-password" placeholder="密码" class="input" autocomplete="current-password">
+                    <button onclick="quickConnect()" class="btn btn-success">连接</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SSH 配置页面 -->
+        <section id="page-ssh" class="page">
+            <div class="page-header">
+                <h2>SSH 配置管理</h2>
+                <button onclick="showAddSSHModal()" class="btn btn-primary">+ 添加配置</button>
+            </div>
+
+            <div id="ssh-configs-list" class="configs-list">
+                <!-- SSH 配置列表将在这里动态加载 -->
+            </div>
+        </section>
+
+        <!-- 命令模板页面 -->
+        <section id="page-templates" class="page">
+            <div class="page-header">
+                <h2>命令模板管理</h2>
+                <button onclick="showAddTemplateModal()" class="btn btn-primary">+ 添加模板</button>
+            </div>
+
+            <div id="templates-list" class="templates-list">
+                <!-- 命令模板列表将在这里动态加载 -->
+            </div>
+        </section>
+
+        <!-- Docker 应用页面 -->
+        <section id="page-docker" class="page">
+            <div class="page-header">
+                <h2>Docker 应用中心</h2>
+                <div>
+                    <button onclick="toggleBatchMode()" class="btn btn-primary" id="batch-mode-btn">
+                        ☑️ 批量安装
+                    </button>
+                    <button onclick="batchInstall()" class="btn btn-success" id="batch-install-btn" style="display: none;">
+                        🚀 安装选中 (<span id="selected-count">0</span>)
+                    </button>
+                    <button onclick="cancelBatchMode()" class="btn" id="cancel-batch-btn" style="display: none;">
+                        取消
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-tabs">
+                <button class="filter-btn active" data-category="all">全部</button>
+                <button class="filter-btn" data-category="web">Web</button>
+                <button class="filter-btn" data-category="database">数据库</button>
+                <button class="filter-btn" data-category="media">媒体</button>
+                <button class="filter-btn" data-category="tools">工具</button>
+            </div>
+
+            <div id="docker-apps-grid" class="docker-apps-grid">
+                <!-- Docker 应用将在这里动态加载 -->
+            </div>
+        </section>
+
+        <!-- 终端页面（保留，用于直接访问终端） -->
+        <section id="page-terminal" class="page">
+            <div class="page-header">
+                <h2>SSH 终端</h2>
+                <div>
+                    <button onclick="openFloatingTerminal()" class="btn btn-success">打开悬浮终端</button>
+                </div>
+            </div>
+            <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                💡 提示：点击右下角的"💻 终端"按钮可以在任何页面打开悬浮终端
+            </p>
+        </section>
+    </main>
+
+    <!-- 模态框：添加 SSH 配置 -->
+    <div id="modal-add-ssh" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加 SSH 配置</h3>
+                <span class="modal-close" onclick="closeModal('modal-add-ssh')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-ssh">
+                    <div class="form-group">
+                        <label>配置名称</label>
+                        <input type="text" name="name" class="input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>主机地址</label>
+                        <input type="text" name="host" class="input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>端口</label>
+                        <input type="number" name="port" class="input" value="22" required>
+                    </div>
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" name="username" class="input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>认证方式</label>
+                        <select name="auth_type" class="select" onchange="toggleAuthType(this.value)">
+                            <option value="password">密码</option>
+                            <option value="private_key">私钥</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="auth-password">
+                        <label>密码</label>
+                        <input type="password" name="password" class="input" autocomplete="current-password">
+                    </div>
+                    <div class="form-group" id="auth-private-key" style="display: none;">
+                        <label>私钥</label>
+                        <textarea name="private_key" class="textarea" rows="6"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeModal('modal-add-ssh')" class="btn">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：添加命令模板 -->
+    <div id="modal-add-template" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加命令模板</h3>
+                <span class="modal-close" onclick="closeModal('modal-add-template')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-template">
+                    <div class="form-group">
+                        <label>模板名称</label>
+                        <input type="text" name="name" class="input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <input type="text" name="description" class="input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>分类</label>
+                        <input type="text" name="category" class="input" value="custom">
+                    </div>
+                    <div class="form-group">
+                        <label>命令（使用 ${变量名} 定义变量）</label>
+                        <textarea name="command" class="textarea" rows="4" required></textarea>
+                        <small>例如: docker run -d -p ${port}:80 nginx</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeModal('modal-add-template')" class="btn">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：执行模板 -->
+    <div id="modal-execute-template" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>执行命令模板</h3>
+                <span class="modal-close" onclick="closeModal('modal-execute-template')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>选择连接</label>
+                    <select id="execute-connection-select" class="select">
+                        <option value="">选择 SSH 连接</option>
+                    </select>
+                </div>
+                <div id="template-variables-form">
+                    <!-- 变量输入框将在这里动态生成 -->
+                </div>
+                <div class="form-group">
+                    <label>预览命令</label>
+                    <pre id="command-preview" class="command-preview"></pre>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('modal-execute-template')" class="btn">取消</button>
+                    <button onclick="executeTemplate()" class="btn btn-success">执行</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：批量安装 -->
+    <div id="modal-batch-install" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>批量安装 Docker 应用</h3>
+                <span class="modal-close" onclick="closeModal('modal-batch-install')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="batch-selected-apps" class="selected-apps-list">
+                    <!-- 选中的应用列表 -->
+                </div>
+                <div class="form-group">
+                    <label>选择连接</label>
+                    <select id="batch-connection-select" class="select">
+                        <option value="">选择 SSH 连接</option>
+                    </select>
+                </div>
+                <div id="batch-variables-form">
+                    <!-- 参数输入区域 -->
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('modal-batch-install')" class="btn">取消</button>
+                    <button onclick="executeBatchInstall()" class="btn btn-success">开始批量安装</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：执行结果 -->
+    <div id="modal-execution-result" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>执行结果</h3>
+                <span class="modal-close" onclick="closeModal('modal-execution-result')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="execution-result-content">
+                    <!-- 执行结果将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：设置 sudo 密码 -->
+    <div id="modal-sudo-password" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>设置 sudo 密码</h3>
+                <span class="modal-close" onclick="closeModal('modal-sudo-password')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    💡 提示：sudo 密码通常就是 SSH 登录密码<br>
+                    使用密码认证连接 SSH 时会自动保存
+                </p>
+                <div class="form-group">
+                    <label>sudo 密码</label>
+                    <input type="password" id="sudo-password-input" class="input" placeholder="通常和 SSH 密码相同" autocomplete="current-password">
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('modal-sudo-password')" class="btn">取消</button>
+                    <button onclick="saveSudoPassword()" class="btn btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast"></div>
+
+    <!-- 悬浮终端按钮 -->
+    <button id="floating-terminal-btn" class="floating-terminal-btn" onclick="toggleFloatingTerminal()" title="打开/关闭终端">
+        💻 终端
+    </button>
+
+    <!-- 悬浮终端窗口 -->
+    <div id="floating-terminal" class="floating-terminal">
+        <div class="floating-terminal-header">
+            <div class="terminal-title">
+                <span>💻 SSH 终端</span>
+                <select id="floating-connection-select" class="select-small" onchange="autoConnectTerminal()">
+                    <option value="">选择 SSH 配置</option>
+                </select>
+            </div>
+            <div class="terminal-controls">
+                <button onclick="minimizeTerminal()" class="terminal-btn" title="最小化">➖</button>
+                <button onclick="maximizeTerminal()" class="terminal-btn" title="最大化/还原">⛶</button>
+                <button onclick="closeFloatingTerminal()" class="terminal-btn" title="关闭">✕</button>
+            </div>
+        </div>
+        
+        <!-- 快捷操作栏 -->
+        <div class="floating-terminal-shortcuts">
+            <button onclick="switchToRoot()" class="btn-small btn-warning">
+                <span class="btn-icon">👑</span>
+                <span class="btn-text">切换root</span>
+            </button>
+            <button onclick="reconnectSSH()" class="btn-small" style="background: var(--primary-color); color: white;">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">重新连接</span>
+            </button>
+            <button onclick="sendTerminalCommand('exit')" class="btn-small">
+                <span class="btn-icon">🚪</span>
+                <span class="btn-text">退出</span>
+            </button>
+            <button onclick="sendTerminalCommand('clear')" class="btn-small">
+                <span class="btn-icon">🧹</span>
+                <span class="btn-text">清屏</span>
+            </button>
+            <button onclick="sendTerminalCommand('docker ps')" class="btn-small">
+                <span class="btn-icon">🐳</span>
+                <span class="btn-text">Docker</span>
+            </button>
+            <button onclick="setupDockerMirror()" class="btn-small" style="background: #10B981; color: white;">
+                <span class="btn-icon">🚀</span>
+                <span class="btn-text">镜像加速</span>
+            </button>
+            <button onclick="restoreDockerConfig()" class="btn-small">
+                <span class="btn-icon">↩️</span>
+                <span class="btn-text">复原配置</span>
+            </button>
+            <button onclick="sendCtrlC()" class="btn-small btn-danger">
+                <span class="btn-icon">⛔</span>
+                <span class="btn-text">中断</span>
+            </button>
+        </div>
+        
+        <div id="floating-terminal-container" class="floating-terminal-body">
+            <!-- xterm.js 终端将在这里渲染 -->
+        </div>
+    </div>
+
+    <!-- JavaScript - 使用本地文件 -->
+    <script src="/static/vendor/xterm.js"></script>
+    <script src="/static/vendor/xterm-addon-fit.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
