@@ -35,7 +35,9 @@ class SSHManager:
                 'hostname': host,
                 'port': port,
                 'username': username,
-                'timeout': 10,
+                'timeout': 30,  # 增加超时时间到30秒
+                'banner_timeout': 30,
+                'auth_timeout': 30,
             }
             
             # 使用密码或私钥

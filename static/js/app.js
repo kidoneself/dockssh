@@ -87,8 +87,14 @@ async function apiCall(url, method = 'GET', data = null) {
         options.body = JSON.stringify(data);
     }
     
+    // 增加超时控制（60秒）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    options.signal = controller.signal;
+    
     try {
         const response = await fetch(API_BASE + url, options);
+        clearTimeout(timeoutId);
         const result = await response.json();
         
         if (!response.ok) {
@@ -97,6 +103,10 @@ async function apiCall(url, method = 'GET', data = null) {
         
         return result;
     } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('请求超时，请检查网络连接');
+        }
         console.error('API 调用失败:', error);
         throw error;
     }
