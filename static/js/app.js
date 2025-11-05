@@ -760,9 +760,29 @@ function showAddDockerAppModal() {
 }
 
 function requestNewApp() {
-    const issueUrl = 'https://github.com/kidoneself/dockssh/issues/new?title=【应用需求】&body=**应用名称：**%0A%0A**应用描述：**%0A%0A**Docker镜像：**%0A%0A**需要的参数：**%0A%0A**其他说明：**';
-    window.open(issueUrl, '_blank');
-    showToast('已打开GitHub Issue页面，请填写需求', 'success');
+    // 提供多种提交方式
+    const options = [
+        '1. Gitee（国内推荐）',
+        '2. GitHub',
+        '3. 腾讯文档表单',
+        '4. 邮件提交',
+        '',
+        '请选择方式（输入数字）：'
+    ].join('\n');
+    
+    const choice = prompt(options, '1');
+    
+    const urls = {
+        '1': 'https://gitee.com/kidoneself/dockssh/issues/new',
+        '2': 'https://github.com/kidoneself/dockssh/issues/new?title=【应用需求】&labels=enhancement',
+        '3': 'https://docs.qq.com/form/page/DT0FMcVlhRXVXZmJE', // 你的腾讯文档表单
+        '4': 'mailto:kidoneself@example.com?subject=DockSSH应用需求&body=应用名称：%0A%0A应用描述：%0A%0ADocker镜像：%0A%0A需要的参数：'
+    };
+    
+    if (urls[choice]) {
+        window.open(urls[choice], '_blank');
+        showToast('已打开提交页面', 'success');
+    }
 }
 
 // ===== 批量安装功能 =====
