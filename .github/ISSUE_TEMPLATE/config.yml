@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 使用文档
+    url: https://github.com/kidoneself/dockssh/blob/main/README.md
+    about: 查看详细的使用文档和常见问题
+  - name: 💬 讨论区
+    url: https://github.com/kidoneself/dockssh/discussions
+    about: 提问、分享使用经验、功能建议
+
