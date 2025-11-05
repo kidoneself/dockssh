@@ -760,11 +760,27 @@ function showAddDockerAppModal() {
 }
 
 function requestNewApp() {
-    // 直接跳转到GitHub Issue
-    const issueUrl = 'https://github.com/kidoneself/dockssh/issues/new?title=【应用需求】新应用名称&labels=enhancement&body=## 应用信息%0A%0A**应用名称：**%0A%0A**应用描述：**%0A%0A**Docker镜像：**%0A例如：nginx:latest%0A%0A**需要的参数：**%0A例如：端口、数据目录等%0A%0A**其他说明：**';
+    // 使用邮件提交应用需求
+    const subject = 'DockSSH应用需求';
+    const body = [
+        '应用名称：',
+        '',
+        '应用描述：',
+        '',
+        'Docker镜像：',
+        '例如：nginx:latest',
+        '',
+        '需要的参数：',
+        '例如：端口、数据目录等',
+        '',
+        '其他说明：',
+        ''
+    ].join('\n');
     
-    window.open(issueUrl, '_blank');
-    showToast('已打开GitHub Issue，请填写应用需求', 'success');
+    const mailtoUrl = `mailto:kidoneself@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    window.location.href = mailtoUrl;
+    showToast('已打开邮件客户端，请发送需求', 'success');
 }
 
 // ===== 批量安装功能 =====
