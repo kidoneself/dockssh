@@ -689,6 +689,18 @@ async function loadDockerApps(category = 'all') {
         const result = await apiCall('/api/docker/apps');
         const container = document.getElementById('docker-apps-grid');
         
+        // 显示应用来源
+        const sourceSpan = document.getElementById('apps-source');
+        if (sourceSpan) {
+            const sourceText = {
+                'online': '🌐 在线',
+                'cached': '📦 缓存',
+                'builtin': '📁 内置'
+            }[result.source] || '';
+            sourceSpan.textContent = sourceText;
+            sourceSpan.className = 'apps-source ' + result.source;
+        }
+        
         // 保存所有应用数据（供批量安装使用）
         allDockerApps = result.apps;
         
@@ -745,6 +757,12 @@ async function loadDockerApps(category = 'all') {
 
 function showAddDockerAppModal() {
     showModal('modal-add-template'); // 重用模板模态框
+}
+
+function requestNewApp() {
+    const issueUrl = 'https://github.com/kidoneself/dockssh/issues/new?title=【应用需求】&body=**应用名称：**%0A%0A**应用描述：**%0A%0A**Docker镜像：**%0A%0A**需要的参数：**%0A%0A**其他说明：**';
+    window.open(issueUrl, '_blank');
+    showToast('已打开GitHub Issue页面，请填写需求', 'success');
 }
 
 // ===== 批量安装功能 =====

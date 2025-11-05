@@ -98,7 +98,7 @@
         <!-- Docker 应用页面 -->
         <section id="page-docker" class="page">
             <div class="page-header">
-                <h2>Docker 应用中心</h2>
+                <h2>Docker 应用中心 <span id="apps-source" class="apps-source"></span></h2>
                 <div>
                     <button onclick="toggleBatchMode()" class="btn btn-primary" id="batch-mode-btn">
                         ☑️ 批量安装
@@ -108,6 +108,9 @@
                     </button>
                     <button onclick="cancelBatchMode()" class="btn" id="cancel-batch-btn" style="display: none;">
                         取消
+                    </button>
+                    <button onclick="requestNewApp()" class="btn">
+                        💡 提交应用需求
                     </button>
                 </div>
             </div>
