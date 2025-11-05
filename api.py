@@ -388,25 +388,64 @@ rm -f /tmp/restore_docker.sh
 
 @docker_router.get("/apps")
 async def list_docker_apps():
-    """列出所有 Docker 应用"""
-    apps = load_json_file(DOCKER_APPS_FILE)
+    """列出所有 Docker 应用（从GitHub拉取）"""
+    import httpx
     
-    # 如果没有应用，返回默认应用列表
-    if not apps:
-        apps = get_default_docker_apps()
-        save_json_file(DOCKER_APPS_FILE, apps)
+    # 在线应用库URL
+    ONLINE_APPS_URL = "https://raw.githubusercontent.com/kidoneself/dockssh/main/data/docker_apps.json"
+    ONLINE_SCRIPTS_BASE = "https://raw.githubusercontent.com/kidoneself/dockssh/main/"
     
-    # 读取脚本内容
+    apps = []
+    source = "cached"
+    
+    try:
+        # 从GitHub获取最新应用列表
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(ONLINE_APPS_URL)
+            if response.status_code == 200:
+                apps = response.json()
+                source = "online"
+                # 缓存到本地（离线时使用）
+                save_json_file(DATA_DIR / "apps_cache.json", apps)
+                print(f"✓ 从GitHub加载了 {len(apps)} 个应用")
+    except Exception as e:
+        # 在线获取失败，使用缓存
+        print(f"在线应用库获取失败: {e}，使用缓存")
+        cache_file = DATA_DIR / "apps_cache.json"
+        if cache_file.exists():
+            apps = load_json_file(cache_file)
+            source = "cached"
+        else:
+            # 使用内置默认应用
+            apps = get_default_docker_apps()
+            source = "builtin"
+    
+    # 读取脚本内容（优先从GitHub，本地兜底）
     for app in apps:
         if 'script' in app:
-            script_path = Path(app['script'])
-            if script_path.exists():
-                with open(script_path, 'r', encoding='utf-8') as f:
-                    app['script_content'] = f.read()
-            else:
-                app['script_content'] = ''
+            script_content = ''
+            
+            # 尝试从GitHub获取脚本
+            if source == "online":
+                try:
+                    async with httpx.AsyncClient(timeout=5.0) as client:
+                        script_url = ONLINE_SCRIPTS_BASE + app['script']
+                        response = await client.get(script_url)
+                        if response.status_code == 200:
+                            script_content = response.text
+                except:
+                    pass
+            
+            # GitHub获取失败，尝试本地文件
+            if not script_content:
+                script_path = Path(app['script'])
+                if script_path.exists():
+                    with open(script_path, 'r', encoding='utf-8') as f:
+                        script_content = f.read()
+            
+            app['script_content'] = script_content
     
-    return {"apps": apps}
+    return {"apps": apps, "source": source}
 
 
 @docker_router.post("/apps")

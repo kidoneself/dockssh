@@ -1,0 +1,46 @@
+{
+  "summary": {
+    "total": 3,
+    "success": 3,
+    "failed": 0,
+    "success_rate": "100.0%"
+  },
+  "details": [
+    {
+      "test": "用户登录",
+      "success": true,
+      "message": "登录成功！Token已获取 (有效期: 2025-11-01 01:36:31)",
+      "time": "2025-10-31 17:36:31",
+      "data": {
+        "token_preview": "eyJ0eXAiOiJKc29uV2ViVG9rZW4iLCJhbGciOiJIUzI1NiJ9.e...",
+        "tenantId": "475909185582661645",
+        "expiration": "2025-11-01 01:36:31"
+      }
+    },
+    {
+      "test": "查询场景列表",
+      "success": true,
+      "message": "成功获取 18 个场景",
+      "time": "2025-10-31 17:36:31",
+      "data": {
+        "scene_count": 18
+      }
+    },
+    {
+      "test": "执行场景: 强电全部-关闭",
+      "success": true,
+      "message": "场景执行成功 ✅",
+      "time": "2025-10-31 17:36:37",
+      "data": {
+        "code": 0,
+        "data": true,
+        "msg": "ok",
+        "path": null,
+        "extra": null,
+        "timestamp": "1761903397147",
+        "errorMsg": "",
+        "isSuccess": true
+      }
+    }
+  ]
+}

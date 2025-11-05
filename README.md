@@ -19,17 +19,55 @@
 - **终端**: xterm.js
 - **存储**: JSON 文件
 
-## 📦 安装
+## 🚀 一行安装命令
+
+### 方式一：超快安装（推荐）
 
 ```bash
-# 安装依赖
-pip install -r requirements.txt
-
-# 运行服务
-python main.py
+bash <(curl -fsSL https://raw.githubusercontent.com/你的用户名/DockSSH/main/quick-install.sh)
 ```
 
-访问: http://localhost:8000
+### 方式二：克隆并安装
+
+```bash
+git clone https://github.com/你的用户名/DockSSH.git && cd DockSSH && pip3 install -r requirements.txt && python3 main.py
+```
+
+### 方式三：本地项目安装
+
+如果已经下载了项目：
+
+```bash
+cd DockSSH && pip3 install -r requirements.txt && python3 main.py
+```
+
+### 方式四：极简版（仅依赖）
+
+```bash
+pip3 install fastapi uvicorn paramiko websockets && python3 main.py
+```
+
+## 📦 手动安装
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/你的用户名/DockSSH.git
+cd DockSSH
+
+# 2. 安装依赖
+pip3 install -r requirements.txt
+
+# 3. 启动服务
+python3 main.py
+
+# 4. 或者后台运行
+nohup python3 main.py > dockssh.log 2>&1 &
+```
+
+## 🌐 访问地址
+
+- 本地访问: **http://localhost:8000**
+- 局域网访问: **http://你的IP:8000**
 
 ## 📖 使用说明
 
