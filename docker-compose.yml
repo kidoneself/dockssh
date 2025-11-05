@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  dockssh:
+    image: kidoneself/dockssh:latest
+    container_name: dockssh
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+
