@@ -391,43 +391,26 @@ async def list_docker_apps():
     """列出所有 Docker 应用（从GitHub拉取）"""
     import httpx
     
-    # 在线应用库URL（支持多个源）
-    SOURCES = [
-        {
-            "name": "Gitee",
-            "apps_url": "https://gitee.com/kidoneself/dockssh/raw/main/data/docker_apps.json",
-            "scripts_base": "https://gitee.com/kidoneself/dockssh/raw/main/"
-        },
-        {
-            "name": "GitHub",
-            "apps_url": "https://raw.githubusercontent.com/kidoneself/dockssh/main/data/docker_apps.json",
-            "scripts_base": "https://raw.githubusercontent.com/kidoneself/dockssh/main/"
-        }
-    ]
+    # 在线应用库URL
+    APPS_URL = "https://raw.githubusercontent.com/kidoneself/dockssh/main/data/docker_apps.json"
+    SCRIPTS_BASE = "https://raw.githubusercontent.com/kidoneself/dockssh/main/"
     
     apps = []
     source = "cached"
-    scripts_base = ""
     
-    # 尝试从多个源获取
-    for src in SOURCES:
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(src["apps_url"])
-                if response.status_code == 200:
-                    apps = response.json()
-                    source = "online"
-                    scripts_base = src["scripts_base"]
-                    # 缓存到本地（离线时使用）
-                    save_json_file(DATA_DIR / "apps_cache.json", apps)
-                    print(f"✓ 从 {src['name']} 加载了 {len(apps)} 个应用")
-                    break
-        except Exception as e:
-            print(f"从 {src['name']} 获取失败: {e}")
-            continue
-    
-    # 所有源都失败，使用缓存
-    if not apps:
+    try:
+        # 从GitHub获取最新应用列表
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(APPS_URL)
+            if response.status_code == 200:
+                apps = response.json()
+                source = "online"
+                # 缓存到本地（离线时使用）
+                save_json_file(DATA_DIR / "apps_cache.json", apps)
+                print(f"✓ 从GitHub加载了 {len(apps)} 个应用")
+    except Exception as e:
+        # GitHub获取失败，使用缓存
+        print(f"从GitHub获取失败: {e}，使用缓存")
         print(f"所有在线源都失败，使用缓存")
         cache_file = DATA_DIR / "apps_cache.json"
         if cache_file.exists():
@@ -443,11 +426,11 @@ async def list_docker_apps():
         if 'script' in app:
             script_content = ''
             
-            # 尝试从在线源获取脚本
-            if source == "online" and scripts_base:
+            # 尝试从GitHub获取脚本
+            if source == "online":
                 try:
                     async with httpx.AsyncClient(timeout=5.0) as client:
-                        script_url = scripts_base + app['script']
+                        script_url = SCRIPTS_BASE + app['script']
                         response = await client.get(script_url)
                         if response.status_code == 200:
                             script_content = response.text
